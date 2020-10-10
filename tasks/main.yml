@@ -1,2 +1,18 @@
 ---
 # tasks file for openssh_sign_hostkey
+- name: Create local folder for host keys
+  file:
+    path: "{{ openssh_sign_hostkey_host_dir | default(playbook_dir + '/files/host-keys') }}/{{ ansible_fqdn }}"
+    state: directory
+    recurse: true
+  delegate_to: localhost
+- name: Get list of host public-keys to transfer
+  shell: (find /etc/ssh -maxdepth 1 -type f -name 'ssh_host_*_key.pub')
+  changed_when: false
+  register: files_to_copy
+- name: Get host public-keys
+  fetch:
+    src: "{{ item }}"
+    dest: "{{ openssh_sign_hostkey_host_dir | default(playbook_dir + '/files/host-keys') }}/{{ ansible_fqdn }}/"
+    flat: true
+  with_items: "{{ files_to_copy.stdout_lines }}"

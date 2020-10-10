@@ -1,1 +1,3 @@
 /molecule/*/files/ca
+/molecule/*/files/host-keys
+*.pyc
