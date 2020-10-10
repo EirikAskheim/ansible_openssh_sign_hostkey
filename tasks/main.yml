@@ -16,3 +16,15 @@
     dest: "{{ openssh_sign_hostkey_host_dir | default(playbook_dir + '/files/host-keys') }}/{{ ansible_fqdn }}/"
     flat: true
   with_items: "{{ files_to_copy.stdout_lines }}"
+- name: Sign host-keys
+  command: >
+      ssh-keygen -s {{ openssh_sign_hostkey_ca | default(playbook_dir + '/files/ca/ca') }}
+      -I ansible
+      -n {{ ansible_hostname }},{{ ansible_fqdn }}
+      -V -5m:+3650d
+      -h
+      {{ item }}
+  args:
+    creates: "{{ item | splitext | first }}-cert.pub"
+  delegate_to: localhost
+  with_fileglob: "{{ openssh_sign_hostkey_host_dir | default(playbook_dir + '/files/host-keys') }}/{{ ansible_fqdn }}/ssh_host_*_key.pub"
