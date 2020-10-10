@@ -1,0 +1,15 @@
+- hosts: localhost,
+  tasks:
+    - name: Stat ca
+      stat:
+        path: files/ca/ca
+      register: stat_ca
+    - block:
+      - name: Create CA folder
+        file:
+          path: files/ca
+          recurse: true
+          state: directory
+      - name: Create CA
+        command: ssh-keygen -f files/ca/ca
+      when: not stat_ca.stat.exists

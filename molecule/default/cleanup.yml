@@ -1,0 +1,6 @@
+- hosts: localhost,
+  tasks:
+    - name: Clean up host-keys
+      file:
+        path: files/host-keys/
+        state: absent
