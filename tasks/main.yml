@@ -4,6 +4,7 @@
   file:
     path: "{{ openssh_sign_hostkey_host_dir | default(playbook_dir + '/files/host-keys') }}/{{ ansible_fqdn }}"
     state: directory
+    mode: 0775
     recurse: true
   delegate_to: localhost
 - name: Get list of host public-keys to transfer
@@ -20,7 +21,7 @@
   command: >
       ssh-keygen -s {{ openssh_sign_hostkey_ca | default(playbook_dir + '/files/ca/ca') }}
       -I ansible
-      -n {{ ansible_hostname }},{{ ansible_fqdn }}
+      -n {{ ansible_hostname }},{{ ansible_fqdn }},{{ ansible_default_ipv4.address }}
       -V -5m:+3650d
       -h
       {{ item }}
@@ -28,3 +29,23 @@
     creates: "{{ item | splitext | first }}-cert.pub"
   delegate_to: localhost
   with_fileglob: "{{ openssh_sign_hostkey_host_dir | default(playbook_dir + '/files/host-keys') }}/{{ ansible_fqdn }}/ssh_host_*_key.pub"
+- name: Copy signed host-certificates to host
+  become: true
+  copy:
+    src: "{{ item }}"
+    dest: /etc/ssh/
+    owner: root
+    group: root
+    mode: 0644
+  with_fileglob: "{{ openssh_sign_hostkey_host_dir | default(playbook_dir + '/files/host-keys') }}/{{ ansible_fqdn }}/ssh_host_*_key-cert.pub"
+  notify:
+    - restart sshd
+- name: Add HostCertificate to sshd config
+  become: yes
+  lineinfile:
+    line: "HostCertificate {{ item | splitext | first }}-cert.pub"
+    path: /etc/ssh/sshd_config
+    insertafter: EOF
+  with_items: "{{ files_to_copy.stdout_lines }}"
+  notify:
+    - restart sshd

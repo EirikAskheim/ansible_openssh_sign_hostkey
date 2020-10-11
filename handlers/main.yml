@@ -1,2 +1,7 @@
 ---
 # handlers file for openssh_sign_hostkey
+- name: restart sshd
+  become: yes
+  service:
+    name: sshd
+    state: restarted

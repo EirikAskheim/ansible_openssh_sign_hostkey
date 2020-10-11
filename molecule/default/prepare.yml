@@ -4,6 +4,7 @@
       file:
         path: files/ca
         recurse: true
+        mode: 0775
         state: directory
     - name: Create CA
       command: ssh-keygen -f files/ca/ca creates=files/ca/ca
@@ -11,5 +12,5 @@
   gather_facts: false
   become: yes
   tasks:
-    - name: Install python
+    - name: Install python # noqa 301
       raw: apk add --update --no-cache python3
