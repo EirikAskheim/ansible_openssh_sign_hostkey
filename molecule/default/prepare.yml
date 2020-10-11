@@ -3,7 +3,6 @@
     - name: Create CA folder
       file:
         path: files/ca
-        recurse: true
         mode: 0775
         state: directory
     - name: Create CA
